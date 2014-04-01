@@ -1,0 +1,39 @@
+{
+    "name": "albertofem/kanji-research",
+    "description": "Kanji research project",
+    "license": "GPLv3",
+    "repositories": [
+        {
+            "type":"package",
+            "package": {
+                "name": "aozorabunko/aozorabunko",
+                "version": "dev-master",
+                "dist": {
+                    "url": "https://github.com/aozorabunko/aozorabunko/archive/master.zip",
+                    "type": "zip"
+                }
+            }
+        }
+    ],
+    "authors": [
+        {
+            "name": "Alberto Fernández",
+            "email": "albertofem@gmail.com"
+        }
+    ],
+    "require": {
+        "aozorabunko/aozorabunko": "@dev",
+        "ext-mecab": "0.5.*",
+        "symfony/console": "2.4.*",
+        "symfony/process": "2.4.*",
+        "symfony/filesystem": "2.4.*",
+        "symfony/finder": "2.4.*",
+        "symfony/dom-crawler": "2.4.*",
+        "symfony/css-selector": "2.4.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "AFM": "src/"
+        }
+    }
+}
