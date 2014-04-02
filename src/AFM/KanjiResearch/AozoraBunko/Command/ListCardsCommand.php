@@ -7,6 +7,7 @@
 
 namespace AFM\KanjiResearch\AozoraBunko\Command;
 
+use AFM\KanjiResearch\AozoraBunko\Entity\Card;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -27,12 +28,15 @@ class ListCardsCommand extends Command
         $finder->files()
             ->in(AOZORA_ROOT . '/cards/*/files/')
             ->ignoreUnreadableDirs()
-            ->name("*.html");
+            ->name("*_*.html");
 
         $total = 0;
         foreach($finder as $file)
         {
-            $output->writeln("Find card with name: <info>" .$file->getFilename(). "</info>");
+            $card = new Card($file);
+            $card->process();
+
+            $output->writeln("Find card with name: <info>" .$file->getFilename(). "</info> - Kanji frequency: <info>" .$card->getTotalCharacters(). "</info>");
             $total++;
         }
 

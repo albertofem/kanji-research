@@ -8,6 +8,7 @@
 namespace AFM\KanjiResearch\AozoraBunko\Command;
 
 use AFM\KanjiResearch\AozoraBunko\Entity\Card;
+use JpnForPhp\Helper\Helper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,6 +16,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ProcessCardCommand extends Command
 {
+    const PATTERN = "/\p{^Han}/u";
+
     protected function configure()
     {
         $this->setName('aozora:cards:process')
@@ -32,6 +35,16 @@ class ProcessCardCommand extends Command
 
         $output->writeln("Title: <info>" .$card->getTitle(). "</info>");
         $output->writeln("Author: <info>" .$card->getAuthor(). "</info>");
-        $output->writeln("Content: <info>" .$card->getContent(). "</info>");
+
+        $kanjiFrequency = $card->getKanjiFrequency();
+
+        $output->writeln("Found <info>" .count($kanjiFrequency). "</info> different kanjis\n");
+
+        foreach($kanjiFrequency as $kanji => $count)
+        {
+            $output->write("<info>" .$kanji. "</info>(" .$count. ") ");
+        }
+
+        $output->writeln("");
     }
 } 

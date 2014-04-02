@@ -7,6 +7,7 @@
 
 namespace AFM\KanjiResearch\AozoraBunko\Entity;
 
+use JpnForPhp\Helper\Helper;
 use Symfony\Component\CssSelector\CssSelector;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
@@ -21,9 +22,11 @@ class Card
 
     protected $content;
 
+    protected $kanjiFrequency;
+
     public function __construct($file)
     {
-        $this->file = $file;
+        $this->file = (string) $file;
     }
 
     public function process()
@@ -33,8 +36,8 @@ class Card
 
         $crawler = new Crawler(file_get_contents($this->file));
 
-        $titleXPath = CssSelector::toXPath("h1.title");
-        $authorXPath = CssSelector::toXPath("h2.author");
+        $titleXPath = CssSelector::toXPath("h1");
+        $authorXPath = CssSelector::toXPath("h2");
         $textXPath = CssSelector::toXPath("div.main_text");
 
         $title = $crawler->filterXPath($titleXPath)->getNode(0)->textContent;
@@ -108,5 +111,28 @@ class Card
     public function getTitle()
     {
         return $this->title;
+    }
+
+    public function getKanjiFrequency()
+    {
+        if(!$this->kanjiFrequency)
+        {
+            $titleCharacters = Helper::extractKanjiCharacters($this->getTitle());
+            $contentCharacters = Helper::extractKanjiCharacters($this->getContent());
+
+            $characters = array_merge($titleCharacters, $contentCharacters);
+            $characters = array_count_values($characters);
+
+            arsort($characters);
+
+            $this->kanjiFrequency = $characters;
+        }
+
+        return $this->kanjiFrequency;
+    }
+
+    public function getTotalCharacters()
+    {
+        return count($this->getKanjiFrequency());
     }
 } 
