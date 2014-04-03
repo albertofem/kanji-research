@@ -33,7 +33,7 @@ class ListCardsCommand extends Command
         $total = 0;
         foreach($finder as $file)
         {
-            $card = new Card($file);
+            $card = Card::createFromFile($file);
             $card->process();
 
             $output->writeln("Find card with name: <info>" .$file->getFilename(). "</info> - Kanji frequency: <info>" .$card->getTotalCharacters(). "</info>");
