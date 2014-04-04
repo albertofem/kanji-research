@@ -13,6 +13,17 @@
                     "type": "zip"
                 }
             }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "daigoproject/obi2",
+                "version": "2.30",
+                "dist": {
+                    "url": "http://kotoba.nuee.nagoya-u.ac.jp/sc/obi2/obi-2.304-20090820.tar.gz",
+                    "type": "tar"
+                }
+            }
         }
     ],
     "authors": [
@@ -23,7 +34,9 @@
     ],
     "require": {
         "aozorabunko/aozorabunko": "@dev",
+        "daigoproject/obi2": "2.30",
         "mbilbille/jpnforphp": "@dev",
+        "clue/graph": "@dev",
         "ext-mecab": "0.5.*",
         "symfony/symfony": "2.4.*",
         "symfony/console": "2.4.*",

@@ -32,6 +32,10 @@ class Card
 
     protected $processed = false;
 
+    protected $obi2Grade = null;
+
+    protected $obi2Bigframe = null;
+
     public static function createFromFile($file)
     {
         $cardFile = __DIR__ . '/../../../../../cards/' . md5($file) . '.json';
@@ -57,7 +61,7 @@ class Card
         if($this->processed)
             return;
 
-        if(!$this->file)
+        if(!file_exists($this->file))
             throw new InvalidArgumentException("This card does not have a file associated!");
 
         $this->file = $this->convertFileToUtf8($this->file);
@@ -157,6 +161,57 @@ class Card
         }
 
         return $this->kanjiFrequency;
+    }
+
+    public function getCommonKanjis($kanjis)
+    {
+        $kanjisContained = $this->getKanjiFrequency();
+
+        $commonKanjis = [];
+
+        foreach($kanjisContained as $kanji => $frequency)
+        {
+            foreach($kanjis as $knownKanji)
+            {
+                if($knownKanji == $kanji)
+                {
+                    $commonKanjis[$knownKanji] = $frequency;
+                }
+            }
+        }
+
+        return $commonKanjis;
+    }
+
+    public function getReadabilityScore($kanjis)
+    {
+        $commonKanjis = $this->getCommonKanjis($kanjis);
+
+        $notKnow = array_diff_key($this->getKanjiFrequency(), $commonKanjis);
+
+        $totalReadableKanjis = count($commonKanjis);
+        $totalNotKnownKanjis = count($notKnow);
+        $totalReadableOcurrences = array_sum($commonKanjis);
+        $totalNotKnownOcurrences = array_sum($notKnow);
+        $totalOcurrences = $totalReadableOcurrences + $totalNotKnownOcurrences;
+        $totalKanjis = $totalReadableKanjis + $totalNotKnownKanjis;
+
+        $percentageNotKnowKanjis = round(($totalNotKnownKanjis*100) / $totalKanjis, 2);
+        $percentageNotKnowOcurrences = round(($totalNotKnownOcurrences*100) / $totalOcurrences, 2);
+
+        $average = round(100-(($percentageNotKnowOcurrences + $percentageNotKnowKanjis) / 2), 2);
+
+        return [
+            'readability' => $average,
+            'total_readable_kanjis' => $totalReadableKanjis,
+            'total_readable_ocurrences' => $totalReadableOcurrences,
+            'total_notknow_kanjis' => $totalNotKnownKanjis,
+            'total_notknow_ocurrences' => $totalNotKnownOcurrences,
+            'total_kanjis' => $totalKanjis,
+            'total_ocurrences' => $totalOcurrences,
+            'percentage_notknow_kanjis' => $percentageNotKnowKanjis,
+            'percentage_notknow_ocurrences' => $percentageNotKnowOcurrences
+        ];
     }
 
     public function getTotalCharacters()

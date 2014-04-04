@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "800ec3ce94aa8f5681e23f8a5a1dbf00",
+    "hash": "c0f27c96ab1fc08e4b612f876561fea5",
     "packages": [
         {
             "name": "aozorabunko/aozorabunko",
@@ -11,6 +11,65 @@
             "dist": {
                 "type": "zip",
                 "url": "https://github.com/aozorabunko/aozorabunko/archive/master.zip",
+                "reference": null,
+                "shasum": null
+            },
+            "type": "library"
+        },
+        {
+            "name": "clue/graph",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/clue/graph.git",
+                "reference": "19b3bf45dab13a07eca9c3a77445e0f4ad40154c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/clue/graph/zipball/19b3bf45dab13a07eca9c3a77445e0f4ad40154c",
+                "reference": "19b3bf45dab13a07eca9c3a77445e0f4ad40154c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Fhaculty": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A mathematical graph/network library written in PHP",
+            "homepage": "https://github.com/clue/graph",
+            "keywords": [
+                "dijkstra",
+                "edge",
+                "graph",
+                "graphviz",
+                "kruskal",
+                "mathematical",
+                "minimum spanning tree",
+                "moore-bellman-ford",
+                "network",
+                "prim",
+                "shortest path",
+                "vertex"
+            ],
+            "time": "2014-03-25 07:27:44"
+        },
+        {
+            "name": "daigoproject/obi2",
+            "version": "2.30",
+            "dist": {
+                "type": "tar",
+                "url": "http://kotoba.nuee.nagoya-u.ac.jp/sc/obi2/obi-2.304-20090820.tar.gz",
                 "reference": null,
                 "shasum": null
             },
@@ -745,7 +804,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "aozorabunko/aozorabunko": 20,
-        "mbilbille/jpnforphp": 20
+        "mbilbille/jpnforphp": 20,
+        "clue/graph": 20
     },
     "platform": {
         "ext-mecab": "0.5.*"
