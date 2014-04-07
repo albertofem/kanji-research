@@ -9,6 +9,7 @@ use AFM\KanjiResearch\AozoraBunko\Command\ListCardsCommand;
 use AFM\KanjiResearch\AozoraBunko\Command\ProcessCardCommand;
 use AFM\KanjiResearch\AozoraBunko\Command\CardReadabilityCommand;
 use AFM\KanjiResearch\AozoraBunko\Command\SearchReadableCardsCommand;
+use AFM\KanjiResearch\AozoraBunko\Command\MeCabCommand;
 
 define('AOZORA_ROOT', __DIR__ . '/../vendor/aozorabunko/aozorabunko');
 
@@ -18,4 +19,5 @@ $application->add(new ListCardsCommand());
 $application->add(new ProcessCardCommand());
 $application->add(new CardReadabilityCommand());
 $application->add(new SearchReadableCardsCommand());
+$application->add(new MeCabCommand());
 $application->run();

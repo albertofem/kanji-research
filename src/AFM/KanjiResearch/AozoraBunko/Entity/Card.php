@@ -233,4 +233,16 @@ class Card
 
         return $convertedFile;
     }
+
+    public function getContentRaw()
+    {
+        if(!file_exists($this->file))
+            throw new InvalidArgumentException("This card does not have a file associated!");
+
+        $this->file = $this->convertFileToUtf8($this->file);
+
+        $content = file_get_contents($this->file);
+
+        return $content;
+    }
 } 
