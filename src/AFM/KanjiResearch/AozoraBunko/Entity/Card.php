@@ -219,7 +219,7 @@ class Card
         return count($this->getKanjiFrequency());
     }
 
-    private function convertFileToUtf8($file)
+    public function convertFileToUtf8($file)
     {
         $convertedFile = $this->cacheDir . md5($this->file) . ".html";
 

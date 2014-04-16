@@ -22,7 +22,9 @@ class SearchReadableCardsCommand extends Command
     {
         $this->setName('aozora:cards:search_readable')
             ->addArgument("kanjis", InputArgument::REQUIRED, "Kanjis you already know")
-            ->addOption("score-margin", "fm", InputOption::VALUE_REQUIRED, "Readability score margin", 80)
+            ->addOption("score-margin", "fm", InputOption::VALUE_REQUIRED, "Readability score margin", 60)
+            ->addOption("show-top-list", "tp", InputOption::VALUE_NONE, "Show top list after processing library")
+            ->addOption("limit-search", "ls", InputOption::VALUE_REQUIRED, "Limit Aozora search", 15000)
             ->setDescription('Search for readable cards')
         ;
     }
@@ -30,6 +32,9 @@ class SearchReadableCardsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $output->writeln("Loading Aozora Bunko library...");
+
+        $showTopList = $input->getOption("show-top-list");
+        $limitSearch = $input->getOption("limit-search");
 
         $finder = new Finder();
         $finder->files()
@@ -39,7 +44,9 @@ class SearchReadableCardsCommand extends Command
 
         $progress = $this->getHelperSet()->get('progress');
         $progress->start($output, $finder->count());
+        $topList = [];
 
+        $i=0;
         foreach($finder as $file)
         {
             $card = Card::createFromFile($file);
@@ -54,9 +61,40 @@ class SearchReadableCardsCommand extends Command
                 $progress->display();
             }
 
+            // add card to top list
+            if($showTopList)
+            {
+                $topList[] = ["score" => $score, "card" => $file];
+            }
+
             $progress->advance();
+            $i++;
+
+            if($i >= $limitSearch)
+            {
+                break;
+            }
         }
 
         $progress->finish();
+
+        if($showTopList)
+        {
+            $output->writeln("Showing most readable cards...");
+
+            uasort($topList, function($a, $b)
+            {
+                if ($a['score'] == $b['score']) {
+                    return 0;
+                }
+
+                return ($a['score'] > $b['score']) ? -1 : 1;
+            });
+
+            foreach($topList as $card)
+            {
+                $output->writeln("Card with score <info>" .$card['score']. "</info> -> <info>" .$card['card']->getFilename(). "</info>");
+            }
+        }
     }
 } 

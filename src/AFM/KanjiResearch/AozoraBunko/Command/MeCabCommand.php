@@ -32,7 +32,11 @@ class MeCabCommand extends Command
         $file = $input->getArgument("file");
 
         $card = new Card($file);
-        $card->process();
+        $file = $card->convertFileToUtf8($file);
+
+        $content = file_get_contents($file);
+        $content = preg_replace("/Shift_JIS/i", "utf-8", $content);
+        $content = explode("\n", $content);
 
         $tokenizer = new \MeCab_Tagger(['-O' => 'chasen']);
         $mecab = new \MeCab_Tagger(['-O' => 'yomi']);
@@ -40,57 +44,102 @@ class MeCabCommand extends Command
         $hepburn = new Romaji();
         $hiragana = new Kana('hiragana');
 
-        $lines = explode("\n", $card->getContent());
-        $realLines = [];
-
-        foreach($lines as $key => $line)
+        $furiganizeSentence = function($sentence, $originalLine) use($mecab, $hepburn, $hiragana, $tokenizer, $output)
         {
-            if(!empty($line) and strlen($line) != 0)
-                $realLines[] = trim($line, "\r\s\t	");
-        }
+            $output->writeln("Original sentence: <info>" .$sentence. "</info>");
 
-        $lineSentences = [];
-
-        foreach($realLines as $line)
-        {
-            $line = explode("。", $line);
-
-            foreach($line as $key => $linn)
-            {
-                if(empty($linn))
-                    unset($line[$key]);
-            }
-
-            $lineSentences[] = $line;
-        }
-
-        $furiganizeSentence = function($sentence) use($mecab, $hepburn, $hiragana, $tokenizer)
-        {
             $tokens = explode("\n", $tokenizer->parse($sentence));
+
+            var_dump($tokens);
+
+            $offset = 0;
 
             foreach($tokens as $key => $token)
             {
                 $tokenized = explode("\t", $token);
 
-                if(preg_match("/\p{Han}/u", $tokenized[0]))
-                {
-                    $sentence = preg_replace_callback("/" .$tokenized[0]. "/u", function($matches) use ($mecab, $hepburn, $hiragana, $tokenized)
-                    {
-                        $hiragana = $hepburn->transliterate($tokenized[1]);
+                // no token
+                if(!isset($tokenized[1]))
+                    continue;
 
-                        return "<ruby><rb>" .$matches[0] . "</rb><rp>（</rp><rt>" .$hiragana. "</rt><rp>）</rp></ruby>";
-                    }, $sentence);
+                // no reading
+                if($tokenized[0] == $tokenized[1])
+                   continue;
+
+                // no kanji
+                if(!preg_match("/\p{Han}/u", $tokenized[0]))
+                    continue;
+
+                if(preg_match("/" .$tokenized[0]. ".*/u", $originalLine, $matchesOrig,  PREG_OFFSET_CAPTURE, $offset))
+                {
+                    $output->writeln("Pattern match: <info>" .$matchesOrig[0][0]. "</info>");
+
+                    $offset = $matchesOrig[0][1];
+
+                    $output->writeln("Matched kanji <info>" .$tokenized[0]. "</info> (" .$tokenized[1]. ") in offset: " . $offset);
+
+                    $originalLine = preg_replace_callback_offset("/" .$tokenized[0]. "/u", function($matches) use ($mecab, $tokenized, &$offset, $output)
+                    {
+                        $output->writeln("Found replacing match for kanji: <info>". $tokenized[0]. "</info> in offset: " .$matches[0][1]);
+
+                        if($offset != $matches[0][1])
+                        {
+                            $output->writeln("Ignoring...");
+
+                            return $matches[0][0];
+                        }
+
+                        $hiragana = Helper::convertKatakanaToHiragana($tokenized[1]);
+
+                        $output->writeln("Adding Ruby notation: <info>" . $hiragana. "</info>");
+
+                        $replacement = "<ruby><rb>" .$matches[0][0] . "</rb><rp>（</rp><rt>" .$hiragana. "</rt><rp>）</rp></ruby>";
+                        $matchOffset = mb_strlen($replacement);
+
+                        $offset += $matchOffset;
+
+                        $output->writeln("New offset value: " .$offset);
+
+                        return $replacement;
+
+                    }, $originalLine);
+
+                    $output->writeln("---------------------");
                 }
             }
 
-            return $sentence;
+            return $originalLine;
         };
+
+
+        foreach($content as $key => $line)
+        {
+            // ignore meta tags
+            if(preg_match("/<title>|<meta/iu", $line))
+                continue;
+
+            $originalLine = preg_replace("/<rb>([^<]*)<\/rb>|<rp>[^<]*<\/rp>|<rt>[^<]*<\/rt>|<\/?ruby>/ui", "$1", $line);
+            $line = trim(strip_tags($originalLine));
+
+            if(!empty($line))
+            {
+                // at least one kanji
+                if(preg_match("/\p{Han}/u", $line))
+                {
+                    $content[$key] = $furiganizeSentence($line, $originalLine);
+                }
+            }
+        }
+
+        file_put_contents($input->getArgument("output"), implode($content));
+
+        die();
 
         foreach($lineSentences as $jkey => $sentences)
         {
-            foreach($sentences as $key => $sentence)
+            foreach($sentences as $key => $line)
             {
-                $lineSentences[$jkey] = $furiganizeSentence($sentence);
+                $lineSentences[$jkey] = $furiganizeSentence($line);
             }
         }
 
@@ -98,4 +147,48 @@ class MeCabCommand extends Command
 
         file_put_contents($input->getArgument("output"), $html);
     }
-} 
+}
+
+function preg_replace_callback_offset($pattern, $callback, $subject, $limit = -1, &$count = 0) {
+
+    if (is_array($subject)) {
+        foreach ($subject as &$subSubject) {
+            $subSubject = preg_replace_callback_offset($pattern, $callback, $subSubject, $limit, $subCount);
+            $count += $subCount;
+        }
+
+        return $subject;
+    }
+
+    if (is_array($pattern)) {
+        foreach ($pattern as $subPattern) {
+            $subject = preg_replace_callback_offset($subPattern, $callback, $subject, $limit, $subCount);
+            $count += $subCount;
+        }
+
+        return $subject;
+    }
+
+    $limit = max(-1, (int)$limit);
+    $count = 0;
+    $offset = 0;
+    $buffer = (string)$subject;
+
+    while ($limit === -1 || $count < $limit) {
+        $result = preg_match($pattern, $buffer, $matches, PREG_OFFSET_CAPTURE, $offset);
+        if (FALSE === $result) return FALSE;
+        if (!$result) break;
+
+        $pos = $matches[0][1];
+        $len = strlen($matches[0][0]);
+        $replace = call_user_func($callback, $matches);
+
+        $buffer = substr_replace($buffer, $replace, $pos, $len);
+
+        $offset = $pos + strlen($replace);
+
+        $count++;
+    }
+
+    return $buffer;
+}
