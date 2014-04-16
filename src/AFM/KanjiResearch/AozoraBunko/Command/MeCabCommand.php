@@ -50,8 +50,6 @@ class MeCabCommand extends Command
 
             $tokens = explode("\n", $tokenizer->parse($sentence));
 
-            var_dump($tokens);
-
             $offset = 0;
 
             foreach($tokens as $key => $token)
